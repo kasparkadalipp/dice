@@ -1,3 +1,4 @@
+
 package dice;
 
 import java.util.Arrays;
@@ -5,64 +6,136 @@ import java.util.Arrays;
 public class Main {
 
 	public static void main(String[] args) {
-		// Tõenäosused:
-		// 1: 62.8%
-		// 2: 54.4%
-		// 3: 30.2%
-		// 4: 9.7%
-		// 5: 1.3%
-		int sides = 6; // täringul on 6 tahku
-		int dicesOriginal = 5; // nii mitme täringu kaupa viskan (nt 5 korraga)
-		int dicesTemp;
-		int triesOriginal = 3; // mitu korda võimalus täringuid visata
-		int triesTemp;
-		int rolls = 100000; // viskan täringuid miljon korda kokku (per 1 täring)
-		int series = rolls / (dicesOriginal * triesOriginal); // viskan täringut nii mitu seeriat (nt 5 täringut korraga)
+		boolean debug = false;
 		
+		// 25%, EI JÄTA MÄNDA ALLES KUI KA TULI 2 MÄNDA PÄRAST ESIMEST VEERETAMIST
+		
+		// MUL ON OLEMAS 2 ÕIGET, VEERETAN TEISED UUESTI
+		// EHK 3 + 3 TÄRINGUT VISATA
+		// KUI SAAN ÜHE MÄNNA, SIIS SEDA ALLES EI JÄTA, ÕIGED JÄTAN!
+		// VÕIDU TINGIMUSED:
+		// 1) SAAN 2 ÕIGET
+		// 2) SAAN 3 ÕIGET
+		// 3) SAAN 2 MÄNDA ja 1 ÕIGE
+		// ehk
+		// 1) 1 + 1
+		// 2) 1 + 1 + 1
+		// 3) 6 + 6 + 1
+		
+		// MUL ON OLEMAS 2 ÕIGET, MÄND, VEERETAN TEISED UUESTI
+		// EHK 2 + 2 TÄRINGUT VISATA
+		// KUI SAAN TEISE MÄNNA, SIIS SELLE JÄTAN KA ALLES JA VEERETAN VIIMAST TÄRINGUT ERALDI
+		// VÕIDU TINGIMUSED:
+		// 1) MÄND + ÕIGE
+		// 2) ÕIGE + ÕIGE (2 ÕIGET)
+		// ehk
+		// 1) 6 + 1
+		// 2) 1 + 1
+		
+		// mida veel kontrollida, 3tk 4st õiged ja 1 mänd käes, kas on mõtet mända alles jätta
+		
+		// parameetrid:
+		int sides = 6; // täringul on 6 tahku
+		int dicesOriginal = 3; // 5 // mitu täringut (nii mitme täringu kaupa viskan (nt 5 korraga))
+		int triesOriginal = 2; // 3 // mitu proovi (e mitu korda võimalus täringuid visata)
+		//int goalAmount = 2; // mitu õiget (peab olema kõigist (kas jahin 5t õiget 5st vmt))
+		int rolls = 10000000; // viskan täringuid miljon korda kokku (per 1 täring)
+		int series = rolls / (dicesOriginal * triesOriginal); // viskan täringut nii mitu seeriat (nt 5 täringut korraga)
+		int wantNumber = 1;
+		int jokerNumber = 6;
+		
+		// ajutised kohahoidjad:
+		int dicesTemp;
+		int triesTemp;
 		int rollResult = 0; // ühe veeretuse tulemus
 		int numbers[] = new int[5]; // massiiv täringute tulemuse jaoks
-		int howManyWantedNumbers = 0; // mitu täringut olen õigesti juba ära visanud
+//		int alreadyCorrect = 0; // mitu täringut olen õigesti juba ära visanud
+		
+		// lõpptulemused:
 		int totalTimesSuccessful = 0; // mitu korda olin edukas oma üldeesmärgi saavutamisel
 		
-		int howManyOfAll = 1; // mitu õiget peab olema kõigist (kas jahin 5t õiget 5st vmt).
+		int jokers;
+		int wantNumbers;
 		
-		// 5t täringut viskan 200 tuhat korda
+		// 5te täringut viskan nt 60 tuhat korda (miljon total vmt)
+		// üks seeria on näiteks 3 korda 5 täringut visata
 		for(int i = 0; i < series; i++){
+			if(debug){
+				System.out.println();
+			}
 			// uus visketsükkel ja numbritel reset, kuna uus katse (5 täringut, 3 katset)
 			triesTemp = triesOriginal; 
 			dicesTemp = dicesOriginal;
-			// senikaua viskan kuni visete korrad on otsas või pole ühtegi täringut visata
-			while(triesTemp > 0 && howManyWantedNumbers < howManyOfAll){ // NB! &&, muidu timestothrow läheb negatiivseks kuna pole veel saanud vajaminevaid tulemusi
+//			alreadyCorrect = 0;
+
+			wantNumbers = 0;
+			// senikaua viskan kuni visete kordi veel on JA veel on vaja saada õigeid täringuid juurde
+			//while(triesTemp > 0 && alreadyCorrect < goalAmount){ // NB! &&, muidu timestothrow läheb negatiivseks kuna pole veel saanud vajaminevaid tulemusi
+			while(triesTemp > 0){
+				jokers = 0;
 				// viskan nii palju täringuid ükshaaval kui on täringuid ette nähtud (nt 5 asemel 3)
-				numbers = new int[dicesTemp];
+				numbers = new int[dicesTemp]; // hoidik tulemuste jaoks, resetin ära uute jaoks, pikkus vastab täringute arvule
+				// reaalne täringute viskamine nii palju arv kordi, kui on täringuid visata
 				for(int j=0;j<dicesTemp;j++){
 					rollResult = (int)(Math.random()*sides)+1;
 					numbers[j]=rollResult;
 				} // for
-				for(int wantThisNumber : numbers){
-					if(wantThisNumber==4){
-						howManyWantedNumbers++;
-						dicesTemp--;	
-					} // if
-				} // for
+			
+				// kontrollin saadud tulemuste massiivi läbi, kui on tahetud number, siis läheb korrektsete sekka
+				for(int number : numbers){
+					if(number == wantNumber){
+						wantNumbers++;
+						dicesTemp--; // ühe võrra vähem saan visata täringuid
+					}else if(number == jokerNumber){
+						jokers++;
+					}
+				}
+				// JÄTA MÄNNAD ALLES:
+				
+				// JÄTAN ÜHE MÄNNA ALLES // KAHANDAB, HALB!
+//				if(jokers == 1){ 
+//					dicesTemp--;
+//					wantNumbers += 0.5;
+//				}
+				
+//				// JÄTAN KAKS MÄNDA ALLES KUI ESINEB // HEA
+//				if(jokers == 2){ 
+//					dicesTemp -= 2;
+//					wantNumbers++;
+//				}
+//				// JÄTAN KOLMEST KAKS MÄNDA ALLES
+//				if(jokers == 3){
+//					dicesTemp -= 2;
+//					wantNumbers++;
+//				}
+				
 				triesTemp--;
-				//System.out.println("timesToThrow " + tries + " result " + result);
-				if(howManyWantedNumbers == howManyOfAll){
+				// kui on õigeid nii palju kui vaja, siis olen olnud edukas
+				
+				// TÖÖTAV KOODI KONTROLL:
+				if(debug)System.out.print("Saan veel visata: " + triesTemp);
+				if(debug)System.out.println(" tulemused: " + Arrays.toString(numbers));
+				
+				if(wantNumbers >= 2){ //((jokers == 2 && wantNumbers == 1) || (wantNumbers >= 2)){
 					totalTimesSuccessful++;
-				} // if
+					if(debug)System.out.println("SUCCESSFUL! \n");
+					break;
+				}
 			} // END while
-
-			//System.out.print("mitu korda saan veel visata: " + tries );
-			//System.out.println(" tulemused: " + Arrays.toString(numbers) );
-			howManyWantedNumbers=0;
 		} // for
 		
-		System.out.println("Kokku täringuid visata: " + rolls + " ja see tähendab, et on seeriaid: " + series);
-		System.out.println("Tahan " + dicesOriginal + "-st saada " + triesOriginal + "-e viskega " + howManyOfAll + ", tulemus: " + totalTimesSuccessful);
+		System.out.println("\nKokku täringuid visata: " + rolls + " ja see tähendab, et on seeriaid: " + series);
+		System.out.println(triesOriginal + " viset " + dicesOriginal + " täringuga " + totalTimesSuccessful); // ja vaja saada "+ goalAmount +" õiget, tulemus: 
 		System.out.println("Percentage: " +  ((double) totalTimesSuccessful / (double) series * 100) + "%");
 
 	}
 }
+
+
+
+//if (){
+//	
+//}
 
 //int die1;
 //int die2;
