@@ -10,16 +10,17 @@ public class main {
 		int rolls = 5000000; // viskan täringuid miljon korda kokku (per 1 täring)
 		int series = rolls / dices; // viskan täringut nii mitu seeriat (nt 5 täringut korraga)
 		int rollResult = 0; // ühe veeretuse tulemus
-		int numbers[] = new int[5];
+		int numbers[] = new int[5]; // massiiv täringute tulemuse jaoks
 		int howManyWantedNumbers = 0; // mitu täringut olen õigesti juba ära visanud
 		int tries; // mitu korda võimalus täringuid visata	
-		int totalTimesSuccessful = 0; // mitmes vise , mitu "4", mitu täringut veeretasin , tulemus
-		int howManyOfAll = 1;
+		int totalTimesSuccessful = 0; // mitu korda olin edukas oma üldeesmärgi saavutamisel
+		
+		int howManyOfAll = 1; // mitu õiget peab olema kõigist (kas jahin 5t õiget 5st vmt).
 		
 		// 5t täringut viskan 200 tuhat korda
 		for(int i = 0; i < series; i++){
-			// uus visketsükkel
-			tries = 3;
+			// uus visketsükkel ja numbritel reset, kuna uus katse (5 täringut, 3 katset)
+			tries = 3; 
 			dices = 5;
 			// senikaua viskan kuni visete korrad on otsas või pole ühtegi täringut visata
 			while(tries > 0 && howManyWantedNumbers < howManyOfAll){ // NB! &&, muidu timestothrow läheb negatiivseks kuna pole veel saanud vajaminevaid tulemusi
